@@ -5,3 +5,6 @@ def index(request):
 
 def login(request):
 	return redirect("/index")
+
+def use(request):
+	return 0
