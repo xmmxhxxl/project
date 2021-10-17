@@ -87,8 +87,6 @@ class fication():
             # 调用方法，表示没有存储远程机器的公钥，允许访问
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # 连接远程机器，地址，端口，用户名密码
-            # print(self.ip, self.sshpasswd, self.sshusename)
-            # print(self.ip,self.sshname,self.sshpasswd)
             ssh.connect(ip, port, user, password, timeout=10)
             # 输入linux命令
             cmd = "python startupFile.py"

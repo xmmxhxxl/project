@@ -162,7 +162,7 @@ class MyThread(QThread):
                 self.showImage = QImage(showfram, showfram.shape[1], showfram.shape[0], QImage.Format_BGR888)
                 self.playLabel.setPixmap(QPixmap.fromImage(self.showImage))
                 # 判断页面是否静止
-                localtime = time.asctime(time.localtime(time.time()))
+                # localtime = time.asctime(time.localtime(time.time()))
                 # self.ifstatic()
                 if n % (self.frame * self.times) == 0:
                     err = np.sum((self.oldimg.astype('float') - self.nowimg.astype('float')) ** 2)
