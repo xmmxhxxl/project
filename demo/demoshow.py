@@ -192,21 +192,6 @@ class MyThread(QThread):
             print("错误！！！\n" + str(ex))
 
 
-# # 使用过程来识别数据
-# class IdentifyThread(QThread):
-#     _identifySignal = pyqtSignal()
-#
-#     def __init__(self):
-#         super(IdentifyThread, self).__init__()
-#
-#     def run(self):
-#         print("执行线程识别")
-#         self.fi = fication()
-#         self.fi.detect()
-#         self.identify = self.fi.resultAnalysis()
-#         self._identifySignal.emit()
-#         print("已经发送信号")
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     im = MyMainWindow()
