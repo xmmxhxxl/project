@@ -7,7 +7,7 @@ import paramiko
 import requests as re
 import os
 from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication
-
+import numpy as np
 import win32com.client as win
 import serial.tools.list_ports
 
@@ -20,13 +20,14 @@ class fication():
     def __init__(self):
         super(fication, self).__init__()
         # self.setupUi(self)
-        self.pingzong = ["硬质塑料瓶", "软质塑料瓶", "大个塑料瓶", "易拉罐"
+        self.pingzong = ["硬质塑料瓶", "软质塑料瓶", "大个塑料瓶", "易拉罐", "其他"
                          ]
 
-        self.label_test = ["hardBottle", "softBottle", "bigBottle", "popCan"
+        self.label_test = ["hardBottle", "softBottle", "bigBottle", "popCan", "default"
                            ]
 
-        self.labelPrice = {"hardBottle": "0.07", "popCan": "0.15", "softBottle": "0.07", "bigBottle": "0.07"}
+        self.labelPrice = {"hardBottle": "0.07", "popCan": "0.15", "softBottle": "0.07", "bigBottle": "0.07",
+                           "default": "0.05"}
         # self.label1=0
 
     # 访问edgeboard，得到识别数据
@@ -45,6 +46,8 @@ class fication():
             # print(out)
             out1 = out[0]
             self.jieguo = out1["label"]
+            # if type(self.jieguo)==
+            print(type(self.jieguo))
             print(self.jieguo)
             self.n = 0
             xiangsidu = out1["score"]
@@ -98,7 +101,7 @@ class fication():
             # 关闭连接
             ssh.close()
         except Exception as ex:
-            print("链接edgeboard超时！",ex)
+            print("链接edgeboard超时！", ex)
 
 
 if __name__ == '__main__':

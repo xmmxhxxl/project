@@ -25,6 +25,7 @@ from threading import *
 import threading
 import numpy as np
 from project.camera import camerashowfram
+from demo.testserial import serialclass
 
 
 class MyMainWindow(QWidget, Ui_Form):
@@ -59,6 +60,9 @@ class MyMainWindow(QWidget, Ui_Form):
             # 设置表格显示标签、相似度、价格
             self.classifiedArea.setItem(self.j, 0, QTableWidgetItem(str(self.fi.label2)))
             self.classifiedArea.setItem(self.j, 1, QTableWidgetItem(str(self.fi.price)))
+            ser = serialclass()
+            ser.open_ser()
+            ser.send_msg()
             QApplication.processEvents()
             print("尝试刷新界面")
             # self.fi.insertIdentificationData()
@@ -82,7 +86,7 @@ class MyMainWindow(QWidget, Ui_Form):
 
     def claerc(self):
         # self.thread.start()
-        self.i = 0
+        self.j = 0
         self.classifiedArea.clearContents()
         self.priceArea.clear()
 

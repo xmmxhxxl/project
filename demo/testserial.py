@@ -51,8 +51,6 @@ class serialclass():
 if __name__ == '__main__':
     ser = serialclass()
     ser.open_ser()
-    while 1:
-        ser.send_msg()
-        ser.read_msg()
-        time.sleep(5)
+    # ser.send_msg()
+    # ser.read_msg()
     # ser.close_ser()
