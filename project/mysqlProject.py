@@ -29,16 +29,36 @@ class MysqlClass():
         self.conn.close()
 
     # 创建数据表
-    def newDatabse(self, usertable):
+    # def newDatabse(self, usertable):
+    #     sql = '''
+    #         create table use{}(
+    #             frequency int(32) primary key auto_increment,
+    #             label varchar(255),
+    #             price float(16),
+    #             date timestamp(6),
+    #             total float(16)
+    #         );
+    #     '''.format(usertable)
+    #
+    #     try:
+    #         self.connect()
+    #         self.cursor.execute(sql)
+    #         self.conn.commit()
+    #         self.close()
+    #     except Exception as ex:
+    #         print("创建数据表失败{},错误原因{}".format(usertable, ex))
+
+    # 查询一条数据
+    def newDatabse(self):
         sql = '''
-            create table use{}(
+            create table usedemo(
                 frequency int(32) primary key auto_increment,
                 label varchar(255),
                 price float(16),
                 date timestamp(6),
                 total float(16)
             );
-        '''.format(usertable)
+        '''
 
         try:
             self.connect()
@@ -46,9 +66,8 @@ class MysqlClass():
             self.conn.commit()
             self.close()
         except Exception as ex:
-            print("创建数据表失败{},错误原因{}".format(usertable, ex))
+            print("创建数据表失败,错误原因{}".format(ex))
 
-    # 查询一条数据
     def select_ont(self, sql, params=[]):
         result = None
         try:
