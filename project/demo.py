@@ -5,17 +5,16 @@
 # @Software : PyCharm
 import sys
 import time
-from PIL import Image
-from PIL import ImageChops
-from PyQt5.QtCore import *
-from project.edgeboardResquart import fication
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QImage, QFont
-from ui.demoProject import Ui_Form
-import cv2 as cv
 from threading import *
+
+import cv2 as cv
 import numpy as np
-from project.camera import camerashowfram
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtWidgets import *
+
+from demoProject import Ui_Form
+from project.edgeboardResquart import fication
 
 
 class MyMainWindow(QWidget, Ui_Form):

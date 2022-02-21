@@ -5,30 +5,26 @@
 # @Software : PyCharm
 import paramiko
 import requests as re
-import os
-from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication
-import numpy as np
-import win32com.client as win
-import serial.tools.list_ports
+
+from mysqlProject import MysqlClass
 
 
-# 语音播报
-
+# import win32com.client as win
 
 # 分类
+
 class fication():
     def __init__(self):
         super(fication, self).__init__()
-        # self.setupUi(self)
-        self.pingzong = ["硬质塑料瓶", "软质塑料瓶", "大个塑料瓶", "易拉罐", "其他"
-                         ]
-
-        self.label_test = ["hardBottle", "softBottle", "bigBottle", "popCan", "default"
-                           ]
-
-        self.labelPrice = {"hardBottle": "0.07", "popCan": "0.15", "softBottle": "0.07", "bigBottle": "0.07",
-                           "default": "0.05"}
-        # self.label1=0
+        self.kind = []
+        self.label_test = []
+        self.labelPrice = {}
+        self.mysql = MysqlClass()
+        self.price = self.mysql.select_all("select * from kindTable")
+        for i in self.price:
+            self.kind.append(i[1])
+            self.label_test.append(i[2])
+            self.labelPrice.update({i[1]: i[3]})
 
     # 访问edgeboard，得到识别数据
     def detect(self):
@@ -41,33 +37,28 @@ class fication():
         try:
             print(result)
             label = result["results"]
-            # print(str)
             out = tuple(label)
-            # print(out)
             out1 = out[0]
             self.jieguo = out1["label"]
-            # if type(self.jieguo)==
-            print(type(self.jieguo))
             print(self.jieguo)
             self.n = 0
             xiangsidu = out1["score"]
             self.xiangsidu = xiangsidu * 100
             self.xiangsidu = round(self.xiangsidu, 2)
-            # self.label1 = 0
         except Exception as ex:
             print(ex)
 
     def resultAnalysis(self):
         try:
             self.label1 = 0
-            voice = win.Dispatch("SAPI.SpVoice")
+            # voice = win.Dispatch("SAPI.SpVoice")
             for self.item in self.label_test:
                 if self.jieguo == self.item and self.xiangsidu > self.n:
                     print(self.label_test.index(self.item))
                     self.label1 = self.label_test.index(self.item)
-                    self.label2 = self.pingzong[self.label1]
+                    self.label2 = self.kind[self.label1]
                     self.price = self.labelPrice[self.jieguo]
-                    voice.Speak(self.pingzong[self.label1])
+                    # voice.Speak(self.pingzong[self.label1])
                     print(self.xiangsidu, self.price)
                     # self.insertIdentificationData()
 
@@ -93,7 +84,6 @@ class fication():
             ssh.connect(ip, port, user, password, timeout=10)
             # 输入linux命令
             cmd = "python startupFile.py"
-            # ls = "ls"
             ssh.exec_command(cmd)
             # 输出命令执行结果
             # result = stdout.read()

@@ -1,0 +1,17 @@
+
+_python:S2208"GImport only needed names or import the module and then use its members.(¾ß€š
+_python:S2208	"GImport only needed names or import the module and then use its members.(†ÄÅ¼
+_python:S2208"GImport only needed names or import the module and then use its members.(ıŒÒş
+dpython:S2208"GImport only needed names or import the module and then use its members.(·©Äîûÿÿÿÿ
+;python:S125"Remove this commented out code.(Ô¨ŠÍşÿÿÿÿ
+lpython:S117#"URename this parameter "showImage" to match the regular expression ^[_a-z][a-z0-9_]*$.(¶ìï¬
+6python:S125)"Remove this commented out code.(¦™ï‹
+rpython:S117Ä"ZRename this local variable "priceArea" to match the regular expression ^[_a-z][a-z0-9_]*$.(é™¿°
+7python:S125»"Remove this commented out code.(Ñ±ï¸
+rpython:S117Æ"ZRename this local variable "priceArea" to match the regular expression ^[_a-z][a-z0-9_]*$.(é™¿°
+Kpython:S1481˜"-Remove the unused local variable "localtime".(’íåúÿÿÿÿ
+mpython:S3776Û"TRefactor this function to reduce its Cognitive Complexity from 42 to the 15 allowed.(¯Œåò
+7python:S125"Remove this commented out code.(¶§ùÑ
+<python:S125°"Remove this commented out code.(„ïËÛıÿÿÿÿ
+7python:S125½"Remove this commented out code.(Ñ±ï¸
+<python:S125Ô"Remove this commented out code.(ÃÅäÛúÿÿÿÿ

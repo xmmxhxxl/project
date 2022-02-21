@@ -1,0 +1,9 @@
+
+_python:S2208"GImport only needed names or import the module and then use its members.(†ÄÅ¼
+_python:S2208"GImport only needed names or import the module and then use its members.(¾ß€š
+dpython:S2208"GImport only needed names or import the module and then use its members.(ë°ÜÁûÿÿÿÿ
+;python:S125""Remove this commented out code.(ù±¾úÿÿÿÿ
+upython:S1172"YRename this local variable "fileName" to match the regular expression ^[_a-z][a-z0-9_]*$.(¼ºÓ¸üÿÿÿÿ
+6python:S125G"Remove this commented out code.(íì´À
+npython:S117R"WRename this parameter "qssFileName" to match the regular expression ^[_a-z][a-z0-9_]*$.(´ğş¹
+fpython:S100R"ORename method "readQssFile" to match the regular expression ^[a-z_][a-z0-9_]*$.(´ğş¹

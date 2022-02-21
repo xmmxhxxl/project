@@ -1,0 +1,11 @@
+
+_python:S2208
+"GImport only needed names or import the module and then use its members.(¾ß€š
+_python:S2208"GImport only needed names or import the module and then use its members.(†ÄÅ¼
+dpython:S2208"GImport only needed names or import the module and then use its members.(·©Äîûÿÿÿÿ
+vpython:S117a"ZRename this local variable "showImage" to match the regular expression ^[_a-z][a-z0-9_]*$.(Ñ‹®³şÿÿÿÿ
+Jpython:S1481d"-Remove the unused local variable "localtime".(’íåúÿÿÿÿ
+6python:S1258"Remove this commented out code.(‡©¿¡
+6python:S125\"Remove this commented out code.(¶§ùÑ
+rpython:S117"ZRename this local variable "priceArea" to match the regular expression ^[_a-z][a-z0-9_]*$.(é™¿°
+6python:S125x"Remove this commented out code.(Ñ±ï¸

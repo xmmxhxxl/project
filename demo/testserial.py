@@ -4,13 +4,25 @@
 # @File : testserial.py
 # @Software : PyCharm
 import serial
-import time
 
 
 class serialclass():
 
     def open_ser(self):
-        port = 'com9'  # 串口号
+        i = 1
+        while i < 255:
+            name = 'com' + str(i)
+            print(name)
+            try:
+                ser = serial.Serial(name)
+                ser.baudrate = 115200
+                ser.timeout = 0.5
+                ser.close()
+                break
+            except Exception as ex:
+                print("找不到设备", ex)
+            i = i + 1
+        port = name  # 串口号
         baudrate = 115200
         try:
             self.ser = serial.Serial(port, baudrate, timeout=5)

@@ -1,26 +1,24 @@
-# -*- coding = utf-8 -*-
+# coding = gbk
 # @Time : 2021/10/25 8:47
 # @Author : liman
 # @File : mainWindos.py
 # @Software : PyCharm
+import json
+import random
 import sys
-import time
-from PIL import Image
-from PIL import ImageChops
-from PyQt5.QtCore import *
-from PyQt5.uic.properties import QtCore
-from project.mysqlProject import MysqlClass
-from project.edgeboardResquart import fication
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QImage, QFont
-from ui.demoProject import Ui_Form
-from ui.demoProject import *
+
 import cv2 as cv
-from threading import *
-import threading
 import numpy as np
-from project.camera import camerashowfram
-from demo.testserial import serialclass
+import requests
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QApplication, QLabel, QTableWidget, QTextEdit
+from paho.mqtt import client as mqtt_client
+
+from demoProject import Ui_Form
+from edgeboardResquart import fication
+from mqtt_send import MQTTReceive
+from mysqlProject import MysqlClass
 
 
 class MyMainWindow(QWidget, Ui_Form):
@@ -30,38 +28,41 @@ class MyMainWindow(QWidget, Ui_Form):
         super().__init__()
         self.setupUi(self)
         self.priceButton_2.clicked.connect(self.claerc)
+
         self.labeltxt = self.label
-        print('开始')
         self.thread = MyThread()
         self.thread.playLabel = self.label
         self.thread.classifiedArea = self.classifiedArea
         self.thread.priceArea = self.priceArea
-        # self.trigger.connect(self.show_camera)
         self.thread._sinout.connect(self.sin)
-        # self.shibie = self.thread.shibie
-        self.thread.start()
-        # self.identify = IdentifyThread()
+
+        self.mqtt = MQTTThread()
+        self.mqtt.user_sin.connect(self.setUserInformation)
+        self.mqtt.switch_sin.connect(self.setSwitchCondition)
+        self.mqtt.start()
+
+        self.setOpenId = None
+        self.setNickName = None
+        self.setAvatarUrl = None
+        self.avatar = None
 
     def sin(self):
-        print("准备刷新界面")
+        self.line = 0
         self.fi = fication()
         self.fi.detect()
         self.fi.resultAnalysis()
         # self.identify.start()
         # self.fi = self.identify.identify
         if self.fi.xiangsidu >= 60:
-            print("尝试刷新界面")
             self.totalPrice = 0
-            # 设置表格显示标签、相似度、价格
-            self.classifiedArea.setItem(self.j, 0, QTableWidgetItem(str(self.fi.label2)))
-            self.classifiedArea.setItem(self.j, 1, QTableWidgetItem(str(self.fi.price)))
-            ser = serialclass()  # 打开串口
-            ser.open_ser()
-            ser.send_msg()
+            self.classifiedArea.insertRow(self.line)
+            self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.fi.label2)))
+            self.classifiedArea.setItem(self.line, 1, QTableWidgetItem(str(self.fi.price)))
+            self.line += 1
+            # ser.open_ser()
+            # ser.send_msg()
             self.insertData()  # 插入数据
             QApplication.processEvents()  # 刷新界面
-            print("尝试刷新界面")
-            # self.fi.insertIdentificationData()
             # 求总价
             try:
                 for it in range(0, self.j + 1):
@@ -69,19 +70,16 @@ class MyMainWindow(QWidget, Ui_Form):
                     print(self.fi.price)
                     self.totalPrice = self.totalPrice + eval(price)
                 self.totalPrice = round(self.totalPrice, 2)
-                print('总价是', self.totalPrice)
+                print(self.totalPrice)
                 self.priceArea.setPlainText(str(self.totalPrice))
                 self.j += 1
                 if self.j > 9:
                     self.j = 1
-                print("没有刷新界面")
                 QApplication.processEvents()
             except Exception as ex:
-                print("当前没有数据")
                 print(ex)
 
     def claerc(self):
-        # self.thread.start()
         self.j = 0
         self.classifiedArea.clearContents()
         self.priceArea.clear()
@@ -89,30 +87,56 @@ class MyMainWindow(QWidget, Ui_Form):
     #   插入数据
     def insertData(self):
         try:
-            print("正在插入数据...")
             my = MysqlClass(host='localhost', database='demomysql', user='root', password='root')
-            my.insert('insert into tablehxl(label,similarity,price,total) values({},{},{},{})'.format(
-                self.fi.label2, self.fi.jieguo, self.fi.price, self.totalPrice))
-            print("成功插入数据！")
+            my.insert('insert into tablehxl(label,similarity,price,total) values(%s,%s,%s,%s)',
+                      [self.fi.label2, self.fi.jieguo, self.fi.price, self.totalPrice])
         except Exception as ex:
-            print("数据插入异常:", ex)
+            print(ex)
+
+    # 设置用户信息
+    def setUserInformation(self, openId, nickName, avatarUrl):
+        print(openId, nickName, avatarUrl)
+        req = requests.get(avatarUrl)
+
+        self.avatar = QPixmap()
+        self.avatar.loadFromData(req.content)
+
+        self.avatarUrl.setPixmap(self.avatar)
+        self.label_3.setText(nickName)
+
+        self.setOpenId = openId
+        self.setNickName = nickName
+        self.setAvatarUrl = avatarUrl
+
+    # 按键状态检测
+    def setSwitchCondition(self, switchCondition):
+        if switchCondition == 'open':
+            self.thread.sinVideo = True
+            self.thread.start()
+
+            self.avatarUrl.setPixmap(self.avatar)
+            self.label_3.setText(self.setNickName)
+
+        if switchCondition == 'close':
+            self.avatarUrl.clear()
+            self.thread.playLabel.clear()
+            self.label_3.clear()
+            self.thread.sinVideo = False
 
 
 # 使用多线程来读取视频流
 class MyThread(QThread):
-    _sinout = pyqtSignal()  # 信号
-    print('成功')
+    _sinout = pyqtSignal()
 
     def __init__(self, parent=None):
         super(MyThread, self).__init__(parent)
-        print('初始化')
         self.playLabel = QLabel()
         self.classifiedArea = QTableWidget()
         self.priceArea = QTextEdit()
+        self.sinVideo = True
 
     def run(self):
         self.cap = cv.VideoCapture(1)
-        print('成功打开摄像头')
         # 获取图形尺寸
         size = (int(self.cap.get(cv.CAP_PROP_FRAME_WIDTH)),
                 int(self.cap.get(cv.CAP_PROP_FRAME_HEIGHT)))
@@ -130,7 +154,7 @@ class MyThread(QThread):
         j = 0
 
         try:
-            while True:
+            while self.sinVideo:
                 # print('开始运行')
                 n += 1
                 # 读取视频流
@@ -167,14 +191,11 @@ class MyThread(QThread):
                         continue
                     (x, y, w, h) = cv.boundingRect(c)  # 用于计算矩形边框的边界
                     cv.rectangle(self.image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                # frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 # 加载视频流到ui界面
                 showfram = self.image
                 self.showImage = QImage(showfram, showfram.shape[1], showfram.shape[0], QImage.Format_BGR888)
                 self.playLabel.setPixmap(QPixmap.fromImage(self.showImage))
                 # 判断页面是否静止
-                # localtime = time.asctime(time.localtime(time.time()))
-                # self.ifstatic()
                 if n % (self.frame * self.times) == 0:
                     err = np.sum((self.oldimg.astype('float') - self.nowimg.astype('float')) ** 2)
                     err /= float(self.oldimg.shape[0] * self.oldimg.shape[1])
@@ -201,6 +222,50 @@ class MyThread(QThread):
                         j = 0
         except Exception as ex:
             print("错误！！！\n" + str(ex))
+
+
+class MQTTThread(QThread):
+    user_sin = pyqtSignal(object, object, object)
+    switch_sin = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super(MQTTThread, self).__init__(parent)
+        self.MQTTReceive = MQTTReceive()
+
+        self.broker = 'www.xmxhxl.top'
+        self.port = 1883
+        self.client_id = f'python-mqtt-{random.randint(0, 1000)}'
+
+    def connect_mqtt(self) -> mqtt_client:
+        def on_connect(client, userdata, flags, rc):
+            if rc == 0:
+                print("Connected to MQTT Broker!")
+            else:
+                print("Failed to connect, return code %d\n", rc)
+
+        client = mqtt_client.Client(self.client_id)
+        client.on_connect = on_connect
+        client.connect(self.broker, self.port)
+        return client
+
+    def subscribe(self, client: mqtt_client, topic):
+        def on_message(client, userdata, msg):
+            # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+            data = json.loads(msg.payload.decode())
+            if msg.topic == 'user/openId':
+                print(data['openId'])
+                self.user_sin.emit(data['openId'], data['nickName'], data['avatarUrl'])
+            else:
+                print(data['msg'])
+                self.switch_sin.emit(data['msg'])
+
+        client.subscribe(topic)
+        client.on_message = on_message
+
+    def run(self):
+        client = self.connect_mqtt()
+        self.subscribe(client, "user/#")
+        client.loop_forever()
 
 
 if __name__ == '__main__':

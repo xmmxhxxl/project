@@ -4,72 +4,48 @@
 # @File : mysqlProject.py
 # @Software : PyCharm
 import pymysql
-import hashlib
-import time
+from sshtunnel import SSHTunnelForwarder
 
 
-class MysqlClass():
-    def __init__(self, host, database, user, password, port=3306, charset='utf8'):
-        self.host = host
-        self.database = database
-        self.user = user
-        self.port = port
-        self.password = password
-        self.charset = charset
+class MysqlClass:
+    def __init__(self):
+        self.ssh_host = "120.24.222.48"
+        self.ssh_port = 22
+        self.ssh_user = "root"
+        self.ssh_password = "Xmmxhxxl0512"
+        self.mysql_host = "127.0.0.1"
+        self.mysql_port = 3306
+        self.mysql_user = "root"
+        self.mysql_password = "root"
+        self.mysql_db = "Identification_Information"
+        self.server = None
+        self.conn = None
+        self.cursor = None
 
     # 链接对象
     def connect(self):
-        self.conn = pymysql.connect(host=self.host, database=self.database, user=self.user,
-                                    passwd=self.password, port=self.port, charset=self.charset)
+        self.server = SSHTunnelForwarder(
+            (self.ssh_host, self.ssh_port),
+            ssh_username=self.ssh_user,
+            ssh_password=self.ssh_password,
+            remote_bind_address=(self.mysql_host, self.mysql_port))
+        self.server.start()
+        self.conn = pymysql.connect(host=self.mysql_host,
+                                    port=self.server.local_bind_port,
+                                    user=self.mysql_user,
+                                    passwd=self.mysql_password,
+                                    db=self.mysql_db)
+        # self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)
         self.cursor = self.conn.cursor()
 
     # 关闭链接
     def close(self):
         self.cursor.close()
         self.conn.close()
+        self.server.close()
 
-    # 创建数据表
-    # def newDatabse(self, usertable):
-    #     sql = '''
-    #         create table use{}(
-    #             frequency int(32) primary key auto_increment,
-    #             label varchar(255),
-    #             price float(16),
-    #             date timestamp(6),
-    #             total float(16)
-    #         );
-    #     '''.format(usertable)
-    #
-    #     try:
-    #         self.connect()
-    #         self.cursor.execute(sql)
-    #         self.conn.commit()
-    #         self.close()
-    #     except Exception as ex:
-    #         print("创建数据表失败{},错误原因{}".format(usertable, ex))
-
-    # 查询一条数据
-    def newDatabse(self):
-        sql = '''
-            create table usedemo(
-                frequency int(32) primary key auto_increment,
-                label varchar(255),
-                price float(16),
-                date timestamp(6),
-                total float(16)
-            );
-        '''
-
-        try:
-            self.connect()
-            self.cursor.execute(sql)
-            self.conn.commit()
-            self.close()
-        except Exception as ex:
-            print("创建数据表失败,错误原因{}".format(ex))
-
-    def select_ont(self, sql, params=[]):
-        result = None
+    def select_one(self, sql, params):
+        result = ()
         try:
             self.connect()
             self.cursor.execute(sql, params)
@@ -80,12 +56,13 @@ class MysqlClass():
         return result
 
     # 查询所有数据
-    def select_all(self, sql, params):
-        result = ()
+    def select_all(self, sql):
         try:
             self.connect()
-            self.cursor.execute(sql, params)
+            self.cursor.execute(sql)
             result = self.cursor.fetchall()
+            self.conn.commit()
+            self.close()
         except Exception as ex:
             print(ex)
         return result
@@ -95,16 +72,6 @@ class MysqlClass():
         try:
             self.connect()
             count = self.cursor.execute(sql, params)
-            self.close()
-        except Exception as ex:
-            print(ex)
-        return count
-
-    def _editdata(self, sql):
-        count = 0
-        try:
-            self.connect()
-            count = self.cursor.execute(sql)
             self.conn.commit()
             self.close()
         except Exception as ex:
@@ -112,13 +79,14 @@ class MysqlClass():
         return count
 
     # 增
-    def insert(self, sql, params=[]):
+    def insert(self, sql, params):
         return self._edit(sql, params)
-
-    # 插入数据
-    def insertdata(self, sql):
-        return self._editdata(sql)
 
     # 删
-    def delete(self, sql, params=[]):
+    def delete(self, sql, params):
         return self._edit(sql, params)
+
+
+if __name__ == '__main__':
+    mysql = MysqlClass()
+    print(mysql.select_all("select * from priceTable"))
