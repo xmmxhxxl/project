@@ -16,12 +16,20 @@ from mysqlProject import MysqlClass
 class fication():
     def __init__(self):
         super(fication, self).__init__()
+
         self.kind = []
         self.label_test = []
         self.labelPrice = {}
+
+        self.label2 = None
+        self.price = None
+
         self.mysql = MysqlClass()
-        self.price = self.mysql.select_all("select * from kindTable")
-        for i in self.price:
+        self.kindList = self.mysql.select_all("select * from kindTable")
+        self.findKind()
+
+    def findKind(self):
+        for i in self.kindList:
             self.kind.append(i[1])
             self.label_test.append(i[2])
             self.labelPrice.update({i[1]: i[3]})
@@ -50,16 +58,14 @@ class fication():
 
     def resultAnalysis(self):
         try:
-            self.label1 = 0
             # voice = win.Dispatch("SAPI.SpVoice")
-            for self.item in self.label_test:
+            for self.item in self.kind:
                 if self.jieguo == self.item and self.xiangsidu > self.n:
-                    print(self.label_test.index(self.item))
-                    self.label1 = self.label_test.index(self.item)
-                    self.label2 = self.kind[self.label1]
+                    print(self.kind.index(self.item))
+                    self.label2 = self.label_test[self.kind.index(self.item)]
                     self.price = self.labelPrice[self.jieguo]
                     # voice.Speak(self.pingzong[self.label1])
-                    print(self.xiangsidu, self.price)
+                    print(self.xiangsidu, self.price, self.label2)
                     # self.insertIdentificationData()
 
                 if self.xiangsidu < 70:
@@ -93,9 +99,8 @@ class fication():
         except Exception as ex:
             print("链接edgeboard超时！", ex)
 
-
-if __name__ == '__main__':
-    ification = fication()
-    ification.remotConnect()
-    ification.detect()
-    ification.resultAnalysis()
+# if __name__ == '__main__':
+#     ification = fication()
+#     ification.remotConnect()
+#     ification.detect()
+#     ification.resultAnalysis()

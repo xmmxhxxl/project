@@ -12,7 +12,7 @@ import numpy as np
 import requests
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QApplication, QLabel, QTableWidget, QTextEdit
+from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QApplication, QLabel, QTableWidget, QTextEdit, QAbstractItemView
 from paho.mqtt import client as mqtt_client
 
 from demoProject import Ui_Form
@@ -26,15 +26,15 @@ class MyMainWindow(QWidget, Ui_Form):
 
     def __init__(self):
         super().__init__()
+        self.fi = fication()
         self.setupUi(self)
-        self.priceButton_2.clicked.connect(self.claerc)
 
         self.labeltxt = self.label
         self.thread = MyThread()
         self.thread.playLabel = self.label
         self.thread.classifiedArea = self.classifiedArea
         self.thread.priceArea = self.priceArea
-        self.thread._sinout.connect(self.sin)
+        self.thread.videoSin.connect(self.sin)
 
         self.mqtt = MQTTThread()
         self.mqtt.user_sin.connect(self.setUserInformation)
@@ -45,15 +45,20 @@ class MyMainWindow(QWidget, Ui_Form):
         self.setNickName = None
         self.setAvatarUrl = None
         self.avatar = None
+        self.line = None
 
     def sin(self):
-        self.line = 0
-        self.fi = fication()
         self.fi.detect()
         self.fi.resultAnalysis()
-        # self.identify.start()
-        # self.fi = self.identify.identify
+        self.line = 0
         if self.fi.xiangsidu >= 60:
+
+            self.classifiedArea.setColumnCount(2)
+            self.classifiedArea.verticalHeader().setVisible(False)
+            self.classifiedArea.horizontalHeader().setVisible(False)
+            self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.classifiedArea.setShowGrid(False)
+
             self.totalPrice = 0
             self.classifiedArea.insertRow(self.line)
             self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.fi.label2)))
@@ -61,7 +66,7 @@ class MyMainWindow(QWidget, Ui_Form):
             self.line += 1
             # ser.open_ser()
             # ser.send_msg()
-            self.insertData()  # 插入数据
+            # self.insertData()  # 插入数据
             QApplication.processEvents()  # 刷新界面
             # 求总价
             try:
@@ -77,12 +82,7 @@ class MyMainWindow(QWidget, Ui_Form):
                     self.j = 1
                 QApplication.processEvents()
             except Exception as ex:
-                print(ex)
-
-    def claerc(self):
-        self.j = 0
-        self.classifiedArea.clearContents()
-        self.priceArea.clear()
+                print("识别错误" + ex)
 
     #   插入数据
     def insertData(self):
@@ -117,26 +117,32 @@ class MyMainWindow(QWidget, Ui_Form):
             self.avatarUrl.setPixmap(self.avatar)
             self.label_3.setText(self.setNickName)
 
+            self.identify_but.clicked.connect(self.sin)
+
         if switchCondition == 'close':
+            self.classifiedArea.clear()
             self.avatarUrl.clear()
             self.thread.playLabel.clear()
             self.label_3.clear()
+            self.priceArea.clear()
+
             self.thread.sinVideo = False
+            self.line = 0
 
 
 # 使用多线程来读取视频流
 class MyThread(QThread):
-    _sinout = pyqtSignal()
+    videoSin = pyqtSignal()
 
     def __init__(self, parent=None):
         super(MyThread, self).__init__(parent)
+        self.cap = cv.VideoCapture(1)
         self.playLabel = QLabel()
         self.classifiedArea = QTableWidget()
         self.priceArea = QTextEdit()
         self.sinVideo = True
 
     def run(self):
-        self.cap = cv.VideoCapture(1)
         # 获取图形尺寸
         size = (int(self.cap.get(cv.CAP_PROP_FRAME_WIDTH)),
                 int(self.cap.get(cv.CAP_PROP_FRAME_HEIGHT)))
@@ -218,7 +224,7 @@ class MyThread(QThread):
                     elif variance < 10000 and average < 500 and j >= 3:
                         # 使用多线程执行识别模块，节约代码执行时间
                         print("开始识别")
-                        self._sinout.emit()
+                        self.videoSin.emit()
                         j = 0
         except Exception as ex:
             print("错误！！！\n" + str(ex))

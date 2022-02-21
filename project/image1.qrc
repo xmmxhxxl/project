@@ -1,11 +1,10 @@
 <RCC>
   <qresource prefix="image">
-    <file>Clear-1.png</file>
+    <file>identify_ico.png</file>
     <file>Clear.png</file>
-    <file>price1.png</file>
     <file>kind.png</file>
-    <file>price.png</file>
-    <file>recoverable.png</file>
-    <file>识别.png</file>
+    <file>price1.png</file>
+    <file>ind.png</file>
+    <file>arc.png</file>
   </qresource>
 </RCC>
