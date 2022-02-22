@@ -13,9 +13,9 @@ from mysqlProject import MysqlClass
 
 # 分类
 
-class fication():
+class RequestEdgeboard():
     def __init__(self):
-        super(fication, self).__init__()
+        super(RequestEdgeboard, self).__init__()
 
         self.kind = []
         self.label_test = []
@@ -23,6 +23,9 @@ class fication():
 
         self.label2 = None
         self.price = None
+        self.result = None
+        self.similarity = None
+        self.threshold = 0
 
         self.mysql = MysqlClass()
         self.kindList = self.mysql.select_all("select * from kindTable")
@@ -35,7 +38,7 @@ class fication():
             self.labelPrice.update({i[1]: i[3]})
 
     # 访问edgeboard，得到识别数据
-    def detect(self, imagePath):
+    def getRecognitionResult(self, imagePath):
         try:
             with open(r'{}'.format(imagePath), 'rb') as f:
                 image = f.read()
@@ -47,12 +50,11 @@ class fication():
             label = result["results"]
             out = tuple(label)
             out1 = out[0]
-            self.jieguo = out1["label"]
-            print(self.jieguo)
-            self.n = 0
-            xiangsidu = out1["score"]
-            self.xiangsidu = xiangsidu * 100
-            self.xiangsidu = round(self.xiangsidu, 2)
+            self.result = out1["label"]
+            print(self.result)
+            similarity = out1["score"]
+            self.similarity = similarity * 100
+            self.similarity = round(self.similarity, 2)
         except Exception as ex:
             print(ex)
 
@@ -60,39 +62,32 @@ class fication():
         try:
             # voice = win.Dispatch("SAPI.SpVoice")
             for self.item in self.kind:
-                if self.jieguo == self.item and self.xiangsidu > self.n:
+                if self.result == self.item and self.similarity > self.threshold:
                     print(self.kind.index(self.item))
                     self.label2 = self.label_test[self.kind.index(self.item)]
-                    self.price = self.labelPrice[self.jieguo]
+                    self.price = self.labelPrice[self.result]
                     # voice.Speak(self.pingzong[self.label1])
-                    print(self.xiangsidu, self.price, self.label2)
-                    # self.insertIdentificationData()
+                    print(self.similarity, self.price, self.label2)
+                    # self.insertIdentiRequestEdgeboardData()
 
-                if self.xiangsidu < 70:
+                if self.similarity < 70:
                     # voice = win.Dispatch("SAPI.SpVoice")
                     # voice.Speak("相似度较低，请重新尝试")
                     break
         except Exception as ex:
             print("resultAnalysis:", ex)
 
-    def remotConnect(self):
+    def ConnectRaspberryPie(self):
         try:
-            # 服务器相关信息,个人的用户名、密码、ip等信息
             ip = "192.168.137.254"
             port = 22
             user = "root"
             password = "root"
-            # 创建SSHClient 实例对象
             ssh = paramiko.SSHClient()
-            # 调用方法，表示没有存储远程机器的公钥，允许访问
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            # 连接远程机器，地址，端口，用户名密码
             ssh.connect(ip, port, user, password, timeout=10)
-            # 输入linux命令
             cmd = "python startupFile.py"
             ssh.exec_command(cmd)
-            # 输出命令执行结果
-            # result = stdout.read()
             print("成功执行命令")
             # 关闭连接
             ssh.close()
@@ -101,7 +96,7 @@ class fication():
 
 
 # if __name__ == '__main__':
-#     ification = fication()
-#     ification.remotConnect()
-#     ification.detect("../picture/image2.png")
-#     ification.resultAnalysis()
+#     RequestEdgeboard = RequestEdgeboard()
+#     RequestEdgeboard.ConnectRaspberryPie()
+#     RequestEdgeboard.getRecognitionResult("../picture/image2.png")
+#     RequestEdgeboard.resultAnalysis()

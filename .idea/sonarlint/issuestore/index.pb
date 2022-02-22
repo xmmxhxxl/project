@@ -21,7 +21,9 @@ A
 project/call.py,0\9\09e0bb30951a7efcac3ba64934e5bd240e5dcc88
 ?
 project/mqtt.py,1\9\19c8164abe87d4e9ab23e3cc7e979ae8a285aebe
-G
-project/mysqlProject.py,7\3\735ffec6b03be368a03ad7cf0ff0020b252274ca
 ;
 demo/edg.py,d\d\ddb491504cb50534798920ca43f999eb02f2510e
+S
+#.idea/sonarlint/issuestore/index.pb,9\f\9fe84ebb15faf917b7def6236dba604453cc61e0
+F
+project/demoProject.ui,5\a\5ad1a893ba34793eb1e5e50320341cad43c7bb16
