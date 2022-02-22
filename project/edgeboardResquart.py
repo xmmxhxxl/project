@@ -35,9 +35,9 @@ class fication():
             self.labelPrice.update({i[1]: i[3]})
 
     # 访问edgeboard，得到识别数据
-    def detect(self):
+    def detect(self, imagePath):
         try:
-            with open(r'../picture/image2.png', 'rb') as f:
+            with open(r'{}'.format(imagePath), 'rb') as f:
                 image = f.read()
                 result = re.post('http://192.168.137.254:24401/', params={'threshold': 0.1}, data=image).json()
         except Exception as ex:
@@ -99,8 +99,9 @@ class fication():
         except Exception as ex:
             print("链接edgeboard超时！", ex)
 
+
 # if __name__ == '__main__':
 #     ification = fication()
 #     ification.remotConnect()
-#     ification.detect()
+#     ification.detect("../picture/image2.png")
 #     ification.resultAnalysis()

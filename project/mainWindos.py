@@ -41,6 +41,15 @@ class MyMainWindow(QWidget, Ui_Form):
         self.mqtt.switch_sin.connect(self.setSwitchCondition)
         self.mqtt.start()
 
+        self.identify_but.clicked.connect(self.sin)
+        self.identify_but.setEnabled(False)
+
+        self.automatic_but.toggled.connect(lambda: self.butChecked(self.automatic_but))
+        self.manual_but.toggled.connect(lambda: self.butChecked(self.manual_but))
+        self.automatic_but.setEnabled(False)
+        self.manual_but.setEnabled(False)
+
+        self.showVideoSin = False
         self.setOpenId = None
         self.setNickName = None
         self.setAvatarUrl = None
@@ -48,86 +57,102 @@ class MyMainWindow(QWidget, Ui_Form):
         self.line = None
 
     def sin(self):
-        self.fi.detect()
+        if self.thread.modelSin == "automatic":
+            self.fi.detect("../picture/image2.png")
+        elif self.thread.modelSin == "manual":
+            self.fi.detect("../picture/manual.png")
         self.fi.resultAnalysis()
         self.line = 0
-        if self.fi.xiangsidu >= 60:
-
-            self.classifiedArea.setColumnCount(2)
-            self.classifiedArea.verticalHeader().setVisible(False)
-            self.classifiedArea.horizontalHeader().setVisible(False)
-            self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.classifiedArea.setShowGrid(False)
-
-            self.totalPrice = 0
-            self.classifiedArea.insertRow(self.line)
-            self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.fi.label2)))
-            self.classifiedArea.setItem(self.line, 1, QTableWidgetItem(str(self.fi.price)))
-            self.line += 1
-            # ser.open_ser()
-            # ser.send_msg()
-            # self.insertData()  # 插入数据
-            QApplication.processEvents()  # 刷新界面
-            # 求总价
-            try:
-                for it in range(0, self.j + 1):
-                    price = self.classifiedArea.item(it, 1).text()
-                    print(self.fi.price)
-                    self.totalPrice = self.totalPrice + eval(price)
-                self.totalPrice = round(self.totalPrice, 2)
-                print(self.totalPrice)
-                self.priceArea.setPlainText(str(self.totalPrice))
-                self.j += 1
-                if self.j > 9:
-                    self.j = 1
-                QApplication.processEvents()
-            except Exception as ex:
-                print("识别错误" + ex)
-
-    #   插入数据
-    def insertData(self):
         try:
-            my = MysqlClass(host='localhost', database='demomysql', user='root', password='root')
-            my.insert('insert into tablehxl(label,similarity,price,total) values(%s,%s,%s,%s)',
-                      [self.fi.label2, self.fi.jieguo, self.fi.price, self.totalPrice])
+            if self.fi.xiangsidu >= 60:
+                self.classifiedArea.setColumnCount(2)
+                self.classifiedArea.verticalHeader().setVisible(False)
+                self.classifiedArea.horizontalHeader().setVisible(False)
+                self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                self.classifiedArea.setShowGrid(False)
+
+                self.totalPrice = 0
+                self.classifiedArea.insertRow(self.line)
+                self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.fi.label2)))
+                self.classifiedArea.setItem(self.line, 1, QTableWidgetItem(str(self.fi.price)))
+                self.line += 1
+                # ser.open_ser()
+                # ser.send_msg()
+                # self.insertData()  # 插入数据
+                QApplication.processEvents()  # 刷新界面
+
+                # 求总价
+                try:
+                    for it in range(0, self.classifiedArea.rowCount()):
+                        price = self.classifiedArea.item(it, 1).text()
+                        self.totalPrice = self.totalPrice + eval(price)
+                    self.totalPrice = round(self.totalPrice, 2)
+                    self.priceArea.setPlainText(str(self.totalPrice))
+                    QApplication.processEvents()
+                except Exception as ex:
+                    print("识别错误" + ex)
         except Exception as ex:
-            print(ex)
+            print("sin ->", ex)
 
     # 设置用户信息
     def setUserInformation(self, openId, nickName, avatarUrl):
-        print(openId, nickName, avatarUrl)
-        req = requests.get(avatarUrl)
+        try:
+            print(openId, nickName, avatarUrl)
+            req = requests.get(avatarUrl)
 
-        self.avatar = QPixmap()
-        self.avatar.loadFromData(req.content)
+            self.avatar = QPixmap()
+            self.avatar.loadFromData(req.content)
 
-        self.avatarUrl.setPixmap(self.avatar)
-        self.label_3.setText(nickName)
+            self.avatarUrl.setPixmap(self.avatar)
+            self.label_3.setText(nickName)
 
-        self.setOpenId = openId
-        self.setNickName = nickName
-        self.setAvatarUrl = avatarUrl
+            self.setOpenId = openId
+            self.setNickName = nickName
+            self.setAvatarUrl = avatarUrl
+
+            self.automatic_but.setEnabled(True)
+            self.manual_but.setEnabled(True)
+        except Exception as ex:
+            print("setUserInformation ->", ex)
 
     # 按键状态检测
     def setSwitchCondition(self, switchCondition):
-        if switchCondition == 'open':
-            self.thread.sinVideo = True
-            self.thread.start()
+        try:
+            if switchCondition == 'open':
+                self.thread.sinVideo = True
+                self.thread.start()
 
-            self.avatarUrl.setPixmap(self.avatar)
-            self.label_3.setText(self.setNickName)
+                self.avatarUrl.setPixmap(self.avatar)
+                self.label_3.setText(self.setNickName)
+                if self.thread.modelSin == "manual":
+                    self.identify_but.setEnabled(True)
 
-            self.identify_but.clicked.connect(self.sin)
+            if switchCondition == 'close':
+                self.classifiedArea.clear()
+                self.avatarUrl.clear()
+                self.thread.playLabel.clear()
+                self.label_3.clear()
+                self.priceArea.clear()
 
-        if switchCondition == 'close':
-            self.classifiedArea.clear()
-            self.avatarUrl.clear()
-            self.thread.playLabel.clear()
-            self.label_3.clear()
-            self.priceArea.clear()
+                self.thread.sinVideo = False
+                self.identify_but.setEnabled(False)
 
-            self.thread.sinVideo = False
-            self.line = 0
+                self.line = 0
+        except Exception as ex:
+            print("setSwitchCondition ->", ex)
+
+    # 模式选择
+    def butChecked(self, but):
+        if but.text() == '自动':
+            if but.isChecked():
+                print("自动")
+                self.thread.modelSin = "automatic"
+                self.identify_but.setEnabled(False)
+        if but.text() == '手动':
+            if but.isChecked():
+                self.thread.modelSin = "manual"
+                # self.identify_but.setEnabled(True)
+                print("手动")
 
 
 # 使用多线程来读取视频流
@@ -141,6 +166,7 @@ class MyThread(QThread):
         self.classifiedArea = QTableWidget()
         self.priceArea = QTextEdit()
         self.sinVideo = True
+        self.modelSin = 'without'
 
     def run(self):
         # 获取图形尺寸
@@ -202,30 +228,33 @@ class MyThread(QThread):
                 self.showImage = QImage(showfram, showfram.shape[1], showfram.shape[0], QImage.Format_BGR888)
                 self.playLabel.setPixmap(QPixmap.fromImage(self.showImage))
                 # 判断页面是否静止
-                if n % (self.frame * self.times) == 0:
-                    err = np.sum((self.oldimg.astype('float') - self.nowimg.astype('float')) ** 2)
-                    err /= float(self.oldimg.shape[0] * self.oldimg.shape[1])
-                    # print(len(items))
-                    print(items)
-                    items[i] = round(err, 3)
-                    i += 1
-                    print(i)
-                    if i >= 3:
-                        i = 0
-                    print(items)
-                    variance = np.var(items)
-                    average = np.mean(items)
-                    print("方差是：", variance)
-                    print("平均数是：", average)
-                    if variance > 10000 and average > 500:
-                        j += 1  #
-                        cv.imwrite("../picture/image{}.png".format(i), self.image)
-                        print("成功保存截图！！", j)
-                    elif variance < 10000 and average < 500 and j >= 3:
-                        # 使用多线程执行识别模块，节约代码执行时间
-                        print("开始识别")
-                        self.videoSin.emit()
-                        j = 0
+                if self.modelSin == "automatic":
+                    if n % (self.frame * self.times) == 0:
+                        err = np.sum((self.oldimg.astype('float') - self.nowimg.astype('float')) ** 2)
+                        err /= float(self.oldimg.shape[0] * self.oldimg.shape[1])
+                        # print(len(items))
+                        print(items)
+                        items[i] = round(err, 3)
+                        i += 1
+                        print(i)
+                        if i >= 3:
+                            i = 0
+                        print(items)
+                        variance = np.var(items)
+                        average = np.mean(items)
+                        print("方差是：", variance)
+                        print("平均数是：", average)
+                        if variance > 10000 and average > 500:
+                            j += 1  #
+                            cv.imwrite("../picture/image{}.png".format(i), self.image)
+                            print("成功保存截图！！", j)
+                        elif variance < 10000 and average < 500 and j >= 3:
+                            # 使用多线程执行识别模块，节约代码执行时间
+                            print("开始识别")
+                            self.videoSin.emit()
+                            j = 0
+                elif self.modelSin == "manual":
+                    cv.imwrite("../picture/manual.png", self.image)
         except Exception as ex:
             print("错误！！！\n" + str(ex))
 
@@ -259,7 +288,6 @@ class MQTTThread(QThread):
             # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
             data = json.loads(msg.payload.decode())
             if msg.topic == 'user/openId':
-                print(data['openId'])
                 self.user_sin.emit(data['openId'], data['nickName'], data['avatarUrl'])
             else:
                 print(data['msg'])
