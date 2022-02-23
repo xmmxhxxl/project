@@ -86,7 +86,10 @@ class MysqlClass:
     def delete(self, sql, params):
         return self._edit(sql, params)
 
+    # 改
+    def update(self, sql, params):
+        return self._edit(sql, params)
 
-if __name__ == '__main__':
-    mysql = MysqlClass()
-    print(mysql.select_all("select * from priceTable"))
+# if __name__ == '__main__':
+#     mysql = MysqlClass()
+#     print(mysql.select_all("select * from priceTable"))

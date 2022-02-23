@@ -12,3 +12,6 @@ for i in data:
     labelPrice.update({i[1]: i[3]})
 print(kind, label_test)
 print(labelPrice)
+
+user = mysql.select_one("SELECT userId FROM user_db WHERE `openId`=%s", ["oW-4T5CiZ5Z6FSt7AuKY2b-gDLsY"])
+print(user[0])

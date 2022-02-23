@@ -19,12 +19,12 @@ class RequestEdgeboard():
 
         self.kind = []
         self.label_test = []
-        self.labelPrice = {}
+        self.bottlePrice = {}
 
-        self.label2 = None
+        self.bottleName = None
         self.price = None
         self.result = None
-        self.similarity = None
+        self.similarity = 0
         self.threshold = 0
 
         self.mysql = MysqlClass()
@@ -35,7 +35,8 @@ class RequestEdgeboard():
         for i in self.kindList:
             self.kind.append(i[1])
             self.label_test.append(i[2])
-            self.labelPrice.update({i[1]: i[3]})
+            self.bottlePrice.update({i[1]: i[3]})
+        print(self.kind, self.label_test, self.bottlePrice)
 
     # 访问edgeboard，得到识别数据
     def getRecognitionResult(self, imagePath):
@@ -46,13 +47,9 @@ class RequestEdgeboard():
         except Exception as ex:
             print("链接edgebodrd失败:", ex)
         try:
-            print(result)
-            label = result["results"]
-            out = tuple(label)
-            out1 = out[0]
-            self.result = out1["label"]
-            print(self.result)
-            similarity = out1["score"]
+            label = tuple(result["results"])[0]
+            self.result = label["label"]
+            similarity = label["score"]
             self.similarity = similarity * 100
             self.similarity = round(self.similarity, 2)
         except Exception as ex:
@@ -63,11 +60,10 @@ class RequestEdgeboard():
             # voice = win.Dispatch("SAPI.SpVoice")
             for self.item in self.kind:
                 if self.result == self.item and self.similarity > self.threshold:
-                    print(self.kind.index(self.item))
-                    self.label2 = self.label_test[self.kind.index(self.item)]
-                    self.price = self.labelPrice[self.result]
+                    self.bottleName = self.label_test[self.kind.index(self.item)]
+                    self.price = self.bottlePrice[self.result]
                     # voice.Speak(self.pingzong[self.label1])
-                    print(self.similarity, self.price, self.label2)
+                    print(self.result,self.similarity, self.price, self.bottleName)
                     # self.insertIdentiRequestEdgeboardData()
 
                 if self.similarity < 70:
@@ -95,8 +91,8 @@ class RequestEdgeboard():
             print("链接edgeboard超时！", ex)
 
 
-# if __name__ == '__main__':
-#     RequestEdgeboard = RequestEdgeboard()
-#     RequestEdgeboard.ConnectRaspberryPie()
-#     RequestEdgeboard.getRecognitionResult("../picture/image2.png")
-#     RequestEdgeboard.resultAnalysis()
+if __name__ == '__main__':
+    RequestEdgeboard = RequestEdgeboard()
+    RequestEdgeboard.ConnectRaspberryPie()
+    RequestEdgeboard.getRecognitionResult("../picture/image2.png")
+    RequestEdgeboard.resultAnalysis()

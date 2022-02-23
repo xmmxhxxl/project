@@ -1,5 +1,0 @@
-
-dpython:S2208"GImport only needed names or import the module and then use its members.(·©Äîûÿÿÿÿ
-jpython:S100"NRename method "cameraShow" to match the regular expression ^[a-z_][a-z0-9_]*$.(¼…ÿ›ûÿÿÿÿ
-6python:S1252"Remove this commented out code.(¶§ùÑ
-5python:S1257"Remove this commented out code.(µËˆE

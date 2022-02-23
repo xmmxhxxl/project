@@ -11,7 +11,7 @@ import time
 import cv2 as cv
 import numpy as np
 import requests
-from PyQt5.QtCore import *
+from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QApplication, QLabel, QTableWidget, QTextEdit, QAbstractItemView
 from paho.mqtt import client as mqtt_client
@@ -28,6 +28,11 @@ class MyMainWindow(QWidget, Ui_Form):
         super().__init__()
         self.requestEdgeboard = RequestEdgeboard()
         self.setupUi(self)
+        self.classifiedArea.setColumnCount(2)
+        self.classifiedArea.verticalHeader().setVisible(False)
+        self.classifiedArea.horizontalHeader().setVisible(False)
+        self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.classifiedArea.setShowGrid(False)
 
         self.thread = MyThread()
         self.thread.playLabel = self.label
@@ -48,6 +53,8 @@ class MyMainWindow(QWidget, Ui_Form):
         self.automatic_but.setEnabled(False)
         self.manual_but.setEnabled(False)
 
+        self.mysql = MysqlClass()
+
         self.showVideoSin = False
         self.setOpenId = None
         self.setNickName = None
@@ -67,16 +74,10 @@ class MyMainWindow(QWidget, Ui_Form):
         self.requestEdgeboard.resultAnalysis()
         self.line = 0
         try:
-            if self.requestEdgeboard.similarity >= 60:
-                self.classifiedArea.setColumnCount(2)
-                self.classifiedArea.verticalHeader().setVisible(False)
-                self.classifiedArea.horizontalHeader().setVisible(False)
-                self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
-                self.classifiedArea.setShowGrid(False)
-
+            if self.requestEdgeboard.similarity >= 80:
                 self.totalPrice = 0
                 self.classifiedArea.insertRow(self.line)
-                self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.requestEdgeboard.label2)))
+                self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.requestEdgeboard.bottleName)))
                 self.classifiedArea.setItem(self.line, 1, QTableWidgetItem(str(self.requestEdgeboard.price)))
                 self.line += 1
                 # ser.open_ser()
@@ -93,6 +94,10 @@ class MyMainWindow(QWidget, Ui_Form):
                 self.totalPrice = round(self.totalPrice, 2)
                 self.priceArea.setPlainText(str(self.totalPrice))
                 QApplication.processEvents()
+
+                self.setIdentificationData(self.requestEdgeboard.result, self.requestEdgeboard.bottleName,
+                                           self.requestEdgeboard.price, self.setOpenId)
+
         except Exception as ex:
             print("setIdentifySpecies ->", ex)
 
@@ -100,10 +105,8 @@ class MyMainWindow(QWidget, Ui_Form):
     def setUserInformation(self, openId, nickName, avatarUrl):
         try:
             print(openId, nickName, avatarUrl)
-            req = requests.get(avatarUrl)
-
             self.avatar = QPixmap()
-            self.avatar.loadFromData(req.content)
+            self.avatar.loadFromData(requests.Session().get(url=avatarUrl).content)
 
             self.avatarUrl.setPixmap(self.avatar)
             self.label_3.setText(nickName)
@@ -111,6 +114,7 @@ class MyMainWindow(QWidget, Ui_Form):
             self.setOpenId = openId
             self.setNickName = nickName
             self.setAvatarUrl = avatarUrl
+            print(self.setOpenId)
 
         except Exception as ex:
             print("setUserInformation ->", ex)
@@ -118,6 +122,7 @@ class MyMainWindow(QWidget, Ui_Form):
     # 按键状态检测
     def setSwitchCondition(self, switchCondition):
         try:
+            print(switchCondition)
             if switchCondition == 'open':
                 self.thread.sinVideo = True
                 self.thread.start()
@@ -159,8 +164,20 @@ class MyMainWindow(QWidget, Ui_Form):
                 self.identify_but.setEnabled(True)
                 print("手动")
 
+    # 插入数据
+    def setIdentificationData(self, label, name, price, openId):
+        try:
+            print(label, name, price, openId)
+            date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            userId = self.mysql.select_one("SELECT userId FROM user_db WHERE `openId`=%s", [openId])
+            self.mysql.insert("INSERT INTO IdentifyingInformation(`label`,`name`,`price`,`date`,`user`) VALUES(%s,%s,"
+                              "%s,%s,%s)", [label, name, price, date, userId])
+            self.mysql.update("UPDATE user_db SET `total`=`total`+%s WHERE `openId`=%s", [price, openId])
+        except Exception as e:
+            print("setIdentificationData ->", e)
+    # 使用多线程来读取视频流
 
-# 使用多线程来读取视频流
+
 class MyThread(QThread):
     videoSin = pyqtSignal()
 
@@ -300,7 +317,6 @@ class MQTTThread(QThread):
             if msg.topic == 'user/openId':
                 self.user_sin.emit(data['openId'], data['nickName'], data['avatarUrl'])
             else:
-                print(data['msg'])
                 self.switch_sin.emit(data['msg'])
 
         client.subscribe(topic)
