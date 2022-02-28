@@ -20,6 +20,7 @@ from demoProject import Ui_Form
 from edgeboardResquart import RequestEdgeboard
 from mqtt_send import MQTTReceive
 from mysqlProject import MysqlClass
+from Servo import Servo
 
 
 class MyMainWindow(QWidget, Ui_Form):
@@ -74,7 +75,7 @@ class MyMainWindow(QWidget, Ui_Form):
         self.requestEdgeboard.resultAnalysis()
         self.line = 0
         try:
-            if self.requestEdgeboard.similarity >= 80:
+            if self.requestEdgeboard.similarity >= 60:
                 self.totalPrice = 0
                 self.classifiedArea.insertRow(self.line)
                 self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.requestEdgeboard.bottleName)))
@@ -94,6 +95,8 @@ class MyMainWindow(QWidget, Ui_Form):
                 self.totalPrice = round(self.totalPrice, 2)
                 self.priceArea.setPlainText(str(self.totalPrice))
                 QApplication.processEvents()
+
+                self.thread.sg90StartSin = True
 
                 self.setIdentificationData(self.requestEdgeboard.result, self.requestEdgeboard.bottleName,
                                            self.requestEdgeboard.price, self.setOpenId)
@@ -142,6 +145,9 @@ class MyMainWindow(QWidget, Ui_Form):
                 self.label_3.clear()
                 self.priceArea.clear()
 
+                self.thread.sg90StartSin = False
+                self.thread.servo.SG90Stop()
+
                 self.thread.sinVideo = False
                 self.identify_but.setEnabled(False)
                 self.automatic_but.setEnabled(False)
@@ -183,7 +189,7 @@ class MyThread(QThread):
 
     def __init__(self, parent=None):
         super(MyThread, self).__init__(parent)
-        self.cap = cv.VideoCapture(1)
+        self.cap = cv.VideoCapture(0)
         self.playLabel = QLabel()
         self.classifiedArea = QTableWidget()
         self.priceArea = QTextEdit()
@@ -192,11 +198,14 @@ class MyThread(QThread):
         self.screenshotSin = False
         self.modelSin = 'without'
 
+        self.servo = Servo()
+        self.sg90StartSin = False
+
         self.es = None
         self.kernel = None
         self.image = None
         self.frame = 24
-        self.times = 2
+        self.times = 0.25
 
     def run(self):
         # 获取图形尺寸
@@ -208,6 +217,7 @@ class MyThread(QThread):
         self.background = None
         n = 0  # 总共进行的帧数
         items = [0] * 3  # 定义一个长度为3的数组，用来存放相邻三秒内的mse指标
+        items = np.array(items)
         global i  # 定义全局变量，用来控制数组的长度
         global j  # 定义全局变量，用来控制识别的次数
         i = 0
@@ -243,8 +253,8 @@ class MyThread(QThread):
                 diff = cv.dilate(diff, self.es, iterations=2)  # 形态学膨胀
 
                 # 显示矩形框
-                contours, hierarchy = cv.findContours(diff.copy(), cv.RETR_EXTERNAL,
-                                                      cv.CHAIN_APPROX_SIMPLE)  # 该函数用来计算一幅图像中目标的轮廓
+                inco, contours, hierarchy = cv.findContours(diff.copy(), cv.RETR_EXTERNAL,
+                                                            cv.CHAIN_APPROX_SIMPLE)  # 该函数用来计算一幅图像中目标的轮廓
                 for c in contours:
                     if cv.contourArea(c) < 1500:  # 用于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示
                         continue
@@ -252,7 +262,7 @@ class MyThread(QThread):
                     cv.rectangle(self.image, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 # 加载视频流到ui界面
                 showFarm = self.image
-                showImage = QImage(showFarm, showFarm.shape[1], showFarm.shape[0], QImage.Format_BGR888)
+                showImage = QImage(showFarm, showFarm.shape[1], showFarm.shape[0], QImage.Format_RGB888)
                 self.playLabel.setPixmap(QPixmap.fromImage(showImage))
                 # 判断页面是否静止
                 if self.modelSin == "automatic":
@@ -274,7 +284,7 @@ class MyThread(QThread):
                             j += 1  #
                             cv.imwrite("../picture/image{}.png".format(i), self.image)
                             print("成功保存截图！！", j)
-                        elif variance < 10000 and average < 500 and j >= 3:
+                        elif variance < 10000 and average < 500 and j >= 2:
                             # 使用多线程执行识别模块，节约代码执行时间
                             print("开始识别")
                             self.videoSin.emit()
@@ -282,6 +292,10 @@ class MyThread(QThread):
                 elif self.modelSin == "manual" and self.screenshotSin:
                     cv.imwrite("../picture/manual.png", self.image)
                     self.screenshotSin = False
+
+                if self.sg90StartSin:
+                    self.servo.driveSG90()
+                    self.sg90StartSin = False
         except Exception as ex:
             print("错误！！！\n" + str(ex))
 
@@ -312,7 +326,6 @@ class MQTTThread(QThread):
 
     def subscribe(self, client: mqtt_client, topic):
         def on_message(client, userdata, msg):
-            # print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
             data = json.loads(msg.payload.decode())
             if msg.topic == 'user/openId':
                 self.user_sin.emit(data['openId'], data['nickName'], data['avatarUrl'])

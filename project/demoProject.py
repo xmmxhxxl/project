@@ -13,15 +13,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("Form")
+        Form.setObjectName("瓶子回收系统")
         Form.resize(919, 522)
         Form.setStyleSheet("/* background-color:rgb(85, 255, 127)")
         self.priceArea = QtWidgets.QTextEdit(Form)
         self.priceArea.setGeometry(QtCore.QRect(750, 330, 151, 51))
         self.priceArea.setStyleSheet("border-radius: 10px;\n"
-"                 border: 2px groove white;\n"
-"                 font: 20pt \"宋体\";\n"
-"             ")
+                                     "                 border: 2px groove white;\n"
+                                     "                 font: 20pt \"宋体\";\n"
+                                     "             ")
         self.priceArea.setReadOnly(True)
         self.priceArea.setObjectName("priceArea")
         self.layoutWidget = QtWidgets.QWidget(Form)
@@ -59,32 +59,32 @@ class Ui_Form(object):
         self.verticalLayout_2.addItem(spacerItem)
         self.classifiedArea = QtWidgets.QTableWidget(self.layoutWidget)
         self.classifiedArea.setStyleSheet("#classifiedArea{\n"
-"    border-radius: 10px;  \n"
-"     border: 2px groove white;\n"
-"    /*gridline-color:rgb(255, 255, 255);*/\n"
-"}/*\n"
-"QtableView{\n"
-"    border:none;\n"
-"}\n"
-"QtableView::item{\n"
-"    border:none;\n"
-"    border-right:none;\n"
-"    border-buttom:none;\n"
-"}*/\n"
-"\n"
-"QHeaderView::section, QTableCornerButton::section {\n"
-"    padding: 1px;\n"
-"    border:none;\n"
-"           border: 2px groove white;\n"
-"           border-radius: 6px;\n"
-"           border: 2px groove white;\n"
-"           /*border-bottom: 1px solid rgb(75, 120, 154);\n"
-"           border-right: 1px solid rgb(75, 120, 154);\n"
-"           border-bottom: 1px solid gray;\n"
-"           background-color:rgba(75, 120, 154, 1);\n"
-"           color:rgba(126,206,244,1);*/\n"
-"           }\n"
-"       ")
+                                          "    border-radius: 10px;  \n"
+                                          "     border: 2px groove white;\n"
+                                          "    /*gridline-color:rgb(255, 255, 255);*/\n"
+                                          "}/*\n"
+                                          "QtableView{\n"
+                                          "    border:none;\n"
+                                          "}\n"
+                                          "QtableView::item{\n"
+                                          "    border:none;\n"
+                                          "    border-right:none;\n"
+                                          "    border-buttom:none;\n"
+                                          "}*/\n"
+                                          "\n"
+                                          "QHeaderView::section, QTableCornerButton::section {\n"
+                                          "    padding: 1px;\n"
+                                          "    border:none;\n"
+                                          "           border: 2px groove white;\n"
+                                          "           border-radius: 6px;\n"
+                                          "           border: 2px groove white;\n"
+                                          "           /*border-bottom: 1px solid rgb(75, 120, 154);\n"
+                                          "           border-right: 1px solid rgb(75, 120, 154);\n"
+                                          "           border-bottom: 1px solid gray;\n"
+                                          "           background-color:rgba(75, 120, 154, 1);\n"
+                                          "           color:rgba(126,206,244,1);*/\n"
+                                          "           }\n"
+                                          "       ")
         self.classifiedArea.setColumnCount(0)
         self.classifiedArea.setObjectName("classifiedArea")
         self.classifiedArea.setRowCount(0)
@@ -92,8 +92,8 @@ class Ui_Form(object):
         self.identify_but = QtWidgets.QPushButton(Form)
         self.identify_but.setGeometry(QtCore.QRect(760, 460, 141, 41))
         self.identify_but.setStyleSheet("border-radius: 10px;\n"
-"     border: 2px groove white;\n"
-"    background-color:rgb(229, 229, 229);")
+                                        "     border: 2px groove white;\n"
+                                        "    background-color:rgb(229, 229, 229);")
         self.identify_but.setText("")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/image/identify_ico.png"), QtGui.QIcon.Disabled, QtGui.QIcon.Off)
@@ -122,8 +122,8 @@ class Ui_Form(object):
         self.verticalLayout.addItem(spacerItem1)
         self.label = QtWidgets.QLabel(self.layoutWidget1)
         self.label.setStyleSheet("border-radius: 10px;\n"
-"                       border: 2px groove white;\n"
-"                   ")
+                                 "                       border: 2px groove white;\n"
+                                 "                   ")
         self.label.setText("")
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
@@ -131,16 +131,16 @@ class Ui_Form(object):
         self.avatarUrl = QtWidgets.QLabel(Form)
         self.avatarUrl.setGeometry(QtCore.QRect(760, 80, 132, 132))
         self.avatarUrl.setStyleSheet("border-radius: 10px;\n"
-"                 border: 2px groove white;\n"
-"             ")
+                                     "                 border: 2px groove white;\n"
+                                     "             ")
         self.avatarUrl.setText("")
         self.avatarUrl.setAlignment(QtCore.Qt.AlignCenter)
         self.avatarUrl.setObjectName("avatarUrl")
         self.label_3 = QtWidgets.QLabel(Form)
         self.label_3.setGeometry(QtCore.QRect(760, 240, 131, 41))
         self.label_3.setStyleSheet("border-radius: 10px;\n"
-"                 border: 1px groove white;\n"
-"             ")
+                                   "                 border: 1px groove white;\n"
+                                   "             ")
         self.label_3.setText("")
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
@@ -163,14 +163,17 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.priceArea.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'宋体\'; font-size:20pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
+        self.priceArea.setHtml(_translate("Form",
+                                          "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                          "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+                                          "p, li { white-space: pre-wrap; }\n"
+                                          "</style></head><body style=\" font-family:\'宋体\'; font-size:20pt; font-weight:400; font-style:normal;\">\n"
+                                          "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.classify.setText(_translate("Form", "种类"))
         self.classify_2.setText(_translate("Form", "价格"))
         self.article.setText(_translate("Form", "物品"))
         self.automatic_but.setText(_translate("Form", "自动"))
         self.manual_but.setText(_translate("Form", "手动"))
+
+
 import image1_rc

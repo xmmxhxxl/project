@@ -36,7 +36,7 @@ class RequestEdgeboard():
             self.kind.append(i[1])
             self.label_test.append(i[2])
             self.bottlePrice.update({i[1]: i[3]})
-        print(self.kind, self.label_test, self.bottlePrice)
+        # print(self.kind, self.label_test, self.bottlePrice)
 
     # 访问edgeboard，得到识别数据
     def getRecognitionResult(self, imagePath):
