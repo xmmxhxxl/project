@@ -20,6 +20,8 @@ from demoProject import Ui_Form
 from edgeboardResquart import RequestEdgeboard
 from mqtt_send import MQTTReceive
 from mysqlProject import MysqlClass
+
+
 from Servo import Servo
 
 
@@ -35,11 +37,11 @@ class MyMainWindow(QWidget, Ui_Form):
         self.classifiedArea.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.classifiedArea.setShowGrid(False)
 
-        self.thread = MyThread()
-        self.thread.playLabel = self.label
-        self.thread.classifiedArea = self.classifiedArea
-        self.thread.priceArea = self.priceArea
-        self.thread.videoSin.connect(self.setIdentifySpecies)
+        self.videoThread = VideoThread()
+        self.videoThread.playLabel = self.label
+        self.videoThread.classifiedArea = self.classifiedArea
+        self.videoThread.priceArea = self.priceArea
+        self.videoThread.videoSin.connect(self.setIdentifySpecies)
 
         self.mqtt = MQTTThread()
         self.mqtt.user_sin.connect(self.setUserInformation)
@@ -54,7 +56,8 @@ class MyMainWindow(QWidget, Ui_Form):
         self.automatic_but.setEnabled(False)
         self.manual_but.setEnabled(False)
 
-        self.mysql = MysqlClass()
+        self.insertDataThread = InsertDataThread()
+        self.insertDataThread.start()
 
         self.showVideoSin = False
         self.setOpenId = None
@@ -64,26 +67,23 @@ class MyMainWindow(QWidget, Ui_Form):
         self.line = None
 
     def setIdentifySpecies(self):
-        if self.thread.modelSin == "automatic":
+        if self.videoThread.modelSin == "automatic":
             self.requestEdgeboard.getRecognitionResult("../picture/image2.png")
 
-        elif self.thread.modelSin == "manual":
-            self.thread.screenshotSin = True
+        elif self.videoThread.modelSin == "manual":
+            self.videoThread.screenshotSin = True
             time.sleep(0.5)
             self.requestEdgeboard.getRecognitionResult("../picture/manual.png")
 
         self.requestEdgeboard.resultAnalysis()
         self.line = 0
         try:
-            if self.requestEdgeboard.similarity >= 60:
+            if self.requestEdgeboard.similarity >= 80:
                 self.totalPrice = 0
                 self.classifiedArea.insertRow(self.line)
                 self.classifiedArea.setItem(self.line, 0, QTableWidgetItem(str(self.requestEdgeboard.bottleName)))
                 self.classifiedArea.setItem(self.line, 1, QTableWidgetItem(str(self.requestEdgeboard.price)))
                 self.line += 1
-                # ser.open_ser()
-                # ser.send_msg()
-                # self.insertData()  # 插入数据
                 QApplication.processEvents()  # 刷新界面
 
                 # 求总价
@@ -96,10 +96,13 @@ class MyMainWindow(QWidget, Ui_Form):
                 self.priceArea.setPlainText(str(self.totalPrice))
                 QApplication.processEvents()
 
-                self.thread.sg90StartSin = True
+                self.videoThread.sg90StartSin = True
 
-                self.setIdentificationData(self.requestEdgeboard.result, self.requestEdgeboard.bottleName,
-                                           self.requestEdgeboard.price, self.setOpenId)
+                self.insertDataThread.insertDataSin = True
+                self.insertDataThread.label = self.requestEdgeboard.result
+                self.insertDataThread.name = self.requestEdgeboard.bottleName
+                self.insertDataThread.price = self.requestEdgeboard.price
+                self.insertDataThread.openId = self.setOpenId
 
         except Exception as ex:
             print("setIdentifySpecies ->", ex)
@@ -127,28 +130,28 @@ class MyMainWindow(QWidget, Ui_Form):
         try:
             print(switchCondition)
             if switchCondition == 'open':
-                self.thread.sinVideo = True
-                self.thread.start()
+                self.videoThread.sinVideo = True
+                self.videoThread.start()
 
                 self.avatarUrl.setPixmap(self.avatar)
                 self.label_3.setText(self.setNickName)
 
                 self.automatic_but.setEnabled(True)
                 self.manual_but.setEnabled(True)
-                if self.thread.modelSin == 'manual':
+                if self.videoThread.modelSin == 'manual':
                     self.identify_but.setEnabled(True)
 
             if switchCondition == 'close':
                 self.classifiedArea.clearContents()
                 self.avatarUrl.clear()
-                self.thread.playLabel.clear()
+                self.videoThread.playLabel.clear()
                 self.label_3.clear()
                 self.priceArea.clear()
 
-                self.thread.sg90StartSin = False
-                self.thread.servo.SG90Stop()
+                self.videoThread.sg90StartSin = False
+                self.videoThread.servo.SG90Stop()
 
-                self.thread.sinVideo = False
+                self.videoThread.sinVideo = False
                 self.identify_but.setEnabled(False)
                 self.automatic_but.setEnabled(False)
                 self.manual_but.setEnabled(False)
@@ -162,33 +165,20 @@ class MyMainWindow(QWidget, Ui_Form):
         if but.text() == '自动':
             if but.isChecked():
                 print("自动")
-                self.thread.modelSin = "automatic"
+                self.videoThread.modelSin = "automatic"
                 self.identify_but.setEnabled(False)
         if but.text() == '手动':
             if but.isChecked():
-                self.thread.modelSin = "manual"
+                self.videoThread.modelSin = "manual"
                 self.identify_but.setEnabled(True)
                 print("手动")
 
-    # 插入数据
-    def setIdentificationData(self, label, name, price, openId):
-        try:
-            print(label, name, price, openId)
-            date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-            userId = self.mysql.select_one("SELECT userId FROM user_db WHERE `openId`=%s", [openId])
-            self.mysql.insert("INSERT INTO IdentifyingInformation(`label`,`name`,`price`,`date`,`user`) VALUES(%s,%s,"
-                              "%s,%s,%s)", [label, name, price, date, userId])
-            self.mysql.update("UPDATE user_db SET `total`=`total`+%s WHERE `openId`=%s", [price, openId])
-        except Exception as e:
-            print("setIdentificationData ->", e)
-    # 使用多线程来读取视频流
 
-
-class MyThread(QThread):
+class VideoThread(QThread):
     videoSin = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(MyThread, self).__init__(parent)
+        super(VideoThread, self).__init__(parent)
         self.cap = cv.VideoCapture(0)
         self.playLabel = QLabel()
         self.classifiedArea = QTableWidget()
@@ -253,8 +243,8 @@ class MyThread(QThread):
                 diff = cv.dilate(diff, self.es, iterations=2)  # 形态学膨胀
 
                 # 显示矩形框
-                inco, contours, hierarchy = cv.findContours(diff.copy(), cv.RETR_EXTERNAL,
-                                                            cv.CHAIN_APPROX_SIMPLE)  # 该函数用来计算一幅图像中目标的轮廓
+                icon,contours, hierarchy = cv.findContours(diff.copy(), cv.RETR_EXTERNAL,
+                                                      cv.CHAIN_APPROX_SIMPLE)  # 该函数用来计算一幅图像中目标的轮廓
                 for c in contours:
                     if cv.contourArea(c) < 1500:  # 用于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示
                         continue
@@ -306,7 +296,6 @@ class MQTTThread(QThread):
 
     def __init__(self, parent=None):
         super(MQTTThread, self).__init__(parent)
-        self.MQTTReceive = MQTTReceive()
 
         self.broker = 'www.xmxhxl.top'
         self.port = 1883
@@ -339,6 +328,40 @@ class MQTTThread(QThread):
         client = self.connect_mqtt()
         self.subscribe(client, "user/#")
         client.loop_forever()
+
+
+class InsertDataThread(QThread):
+
+    def __init__(self, parent=None):
+        super(InsertDataThread, self).__init__(parent)
+        self.openId = None
+        self.label = None
+        self.name = None
+        self.price = None
+
+        self.mysql = MysqlClass()
+        self.insertDataSin = False
+
+    def run(self):
+        try:
+            while True:
+                if self.insertDataSin:
+                    self.setIdentificationData(self.label, self.name, self.price, self.openId)
+                    self.insertDataSin = False
+                    print("数据插入成功")
+        except Exception as e:
+            print("InsertDataThread-run ->", e)
+
+    def setIdentificationData(self, label, name, price, openId):
+        try:
+            print(label, name, price, openId)
+            date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            userId = self.mysql.select_one("SELECT userId FROM user_db WHERE `openId`=%s", [openId])
+            self.mysql.insert("INSERT INTO IdentifyingInformation(`label`,`name`,`price`,`date`,`user`) VALUES(%s,%s,"
+                              "%s,%s,%s)", [label, name, price, date, userId])
+            self.mysql.update("UPDATE user_db SET `total`=`total`+%s WHERE `openId`=%s", [price, openId])
+        except Exception as e:
+            print("setIdentificationData ->", e)
 
 
 if __name__ == '__main__':
